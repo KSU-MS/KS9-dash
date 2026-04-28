@@ -1,16 +1,16 @@
 LCD Pin,Signal,Teensy 4.0 Pin,Connection Description
-1,LED-A,External,LED Power approx 9V @ 40mA
-2,LED-K,GND,LED Ground
-3,IOVCC,3.3V,+3.3V Logic Power
+1,LED-A,External,LED backlight power approx 9V @ 40mA
+2,LED-K,GND,LED backlight ground
+3,IOVCC,3.3V,+3.3V logic power
 24,SDA,11,LCD MOSI using default SPI
 25,GND,GND,Ground
 27,GND,GND,Ground
-32,WRB,8,LCD DC / R/S
+32,WRB,9,LCD DC / R/S
 33,RS,13,LCD SCK using default SPI
-34,CSB,10,LCD CS
-35,RESET,9,LCD Reset
+34,CSB,10,LCD chip select
+35,RESET,8,LCD reset
 36,IM0,GND,SPI mode select
 37,IM1,3.3V,SPI mode select
 38,IM2,3.3V,SPI mode select
-39,VCI,3.3V,+3.3V LCD Power
+39,VCI,3.3V,+3.3V LCD power
 40,GND,GND,Ground
