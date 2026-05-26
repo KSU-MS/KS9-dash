@@ -4,7 +4,6 @@
 #include <Arduino.h>
 
 // Local
-#include "can_handeler.hpp"
 #include "display_handeler.hpp"
 #include "parameters.hpp"
 
@@ -30,6 +29,8 @@ void update_buttons() {
 
 //
 //// Interval Function stuffs
+#include "can_handeler.hpp"
+
 IntervalTimer timer_1hz;
 IntervalTimer timer_10hz;
 
