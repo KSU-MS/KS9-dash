@@ -6,10 +6,13 @@
 #define INVERTER_CAN_BAUD_RATE 500000
 
 //
-//// Display pins
+//// Display
 #define TFT_RST 8
 #define TFT_DC 9
 #define TFT_CS 10
+
+#define DISPLAY_HORIZONTAL 320
+#define DISPLAY_VERTICAL 240
 
 //
 //// User button pins
