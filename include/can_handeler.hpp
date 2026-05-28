@@ -26,11 +26,86 @@ void check_messages() {
                      0);
 
       decode_can_0x0c3_VCU_BSPD_OK_HIGH(&kms_can, (uint8_t *)&BSPD_state);
+
+      bool apps_fault, bse_fault, ss_fault;
+      decode_can_0x0c3_VCU_ACCEL_IMPLAUSIBLE(&kms_can, (uint8_t *)&apps_fault);
+      decode_can_0x0c3_VCU_BRAKE_IMPLAUSIBLE(&kms_can, (uint8_t *)&bse_fault);
+      decode_can_0x0c3_VCU_ACCEL_BRAKE_IMPLAUSIBLE(&kms_can,
+                                                   (uint8_t *)&ss_fault);
+
+      if (apps_fault)
+        lv_label_set_text_fmt(joe_dash.Screenshot_fault, "SS");
+      else
+        lv_label_set_text_fmt(joe_dash.Screenshot_fault, "");
+
+      if (bse_fault)
+        lv_label_set_text_fmt(joe_dash.BSE_fault, "BSE");
+      else
+        lv_label_set_text_fmt(joe_dash.BSE_fault, "");
+
+      if (ss_fault)
+        lv_label_set_text_fmt(joe_dash.APPS_fault, "APPS");
+      else
+        lv_label_set_text_fmt(joe_dash.APPS_fault, "");
+
+      uint8_t max_torque;
+      decode_can_0x0c3_VCU_MAX_TORQUE(&kms_can, &max_torque);
+
+      lv_label_set_text_fmt(joe_dash.Torque_limit_nm, "%iNm", max_torque);
+
+      uint8_t vcu_state;
+      decode_can_0x0c3_VCU_STATEMACHINE_STATE(&kms_can, &vcu_state);
+
+      switch (vcu_state) {
+      case 0:
+        lv_label_set_text(joe_dash.VCU_state, "STARTUP");
+        break;
+      case 1:
+        lv_label_set_text(joe_dash.VCU_state, "TS DISABLED");
+        break;
+      case 2:
+        lv_label_set_text(joe_dash.VCU_state, "TS ENERGIZED");
+        break;
+      case 3:
+        lv_label_set_text(joe_dash.VCU_state, "TS ENABLED");
+        break;
+      case 4:
+        lv_label_set_text(joe_dash.VCU_state, "READY TO RIP");
+        break;
+      case 5:
+        lv_label_set_text(joe_dash.VCU_state, "LAUNCH WAIT");
+        break;
+      case 6:
+        lv_label_set_text(joe_dash.VCU_state, "LAUNCH");
+        break;
+      default:
+        lv_label_set_text(joe_dash.VCU_state, "UNKNOWN");
+        break;
+      }
       break;
 
     case CAN_ID_M167_VOLTAGE_INFO:
       unpack_message(&kms_can, CAN_ID_M167_VOLTAGE_INFO, msg_in.buf.val,
                      msg_in.length, 0);
+      double ts_voltage_double;
+
+      decode_can_0x0a7_INV_DC_Bus_Voltage(&kms_can, &ts_voltage_double);
+
+      lv_label_set_text_fmt(joe_dash.TS_voltage, "%iv", (int)ts_voltage_double);
+      break;
+
+    case CAN_ID_M160_TEMPERATURE_SET_1:
+      unpack_message(&kms_can, CAN_ID_M160_TEMPERATURE_SET_1, msg_in.buf.val,
+                     msg_in.length, 0);
+
+      uint8_t module_a, module_b, module_c;
+
+      decode_can_0x0a0_INV_Module_A_Temp(&kms_can, (double *)&module_a);
+      decode_can_0x0a0_INV_Module_B_Temp(&kms_can, (double *)&module_b);
+      decode_can_0x0a0_INV_Module_C_Temp(&kms_can, (double *)&module_c);
+
+      lv_label_set_text_fmt(joe_dash.Inverter_temps_c, "%i/%i/%i", module_a,
+                            module_b, module_c);
       break;
     }
   }
