@@ -13,25 +13,25 @@ void check_messages() {
     can_message msg_in = inv_can.get_controller_message();
 
     switch (msg_in.id) {
-    case CAN_ID_ACU_SHUTDOWN_STATUS:
-      unpack_message(&kms_can, CAN_ID_ACU_SHUTDOWN_STATUS, msg_in.buf.val,
-                     msg_in.length, 0);
-
-      decode_can_0x258_acu_bms_relay_state(&kms_can, (uint8_t *)&BMS_state);
-      decode_can_0x258_acu_imd_relay_state(&kms_can, (uint8_t *)&IMD_state);
-      break;
-
     case CAN_ID_VCU_STATUS:
       unpack_message(&kms_can, CAN_ID_VCU_STATUS, msg_in.buf.val, msg_in.length,
                      0);
 
-      decode_can_0x0c3_VCU_BSPD_OK_HIGH(&kms_can, (uint8_t *)&BSPD_state);
+      uint8_t IMD_state_uint, BMS_state_uint, BSPD_state_uint;
 
-      bool apps_fault, bse_fault, ss_fault;
-      decode_can_0x0c3_VCU_ACCEL_IMPLAUSIBLE(&kms_can, (uint8_t *)&apps_fault);
-      decode_can_0x0c3_VCU_BRAKE_IMPLAUSIBLE(&kms_can, (uint8_t *)&bse_fault);
-      decode_can_0x0c3_VCU_ACCEL_BRAKE_IMPLAUSIBLE(&kms_can,
-                                                   (uint8_t *)&ss_fault);
+      decode_can_0x0c3_VCU_IMD_OK_HIGH(&kms_can, &IMD_state_uint);
+      decode_can_0x0c3_VCU_BMS_OK_HIGH(&kms_can, &BMS_state_uint);
+      decode_can_0x0c3_VCU_BSPD_OK_HIGH(&kms_can, &BSPD_state_uint);
+
+      IMD_state = bool(IMD_state_uint);
+      BMS_state = bool(BMS_state_uint);
+      BSPD_state = bool(BSPD_state_uint);
+
+#ifdef HAS_DISPLAY
+      uint8_t apps_fault, bse_fault, ss_fault;
+      decode_can_0x0c3_VCU_ACCEL_IMPLAUSIBLE(&kms_can, &apps_fault);
+      decode_can_0x0c3_VCU_BRAKE_IMPLAUSIBLE(&kms_can, &bse_fault);
+      decode_can_0x0c3_VCU_ACCEL_BRAKE_IMPLAUSIBLE(&kms_can, &ss_fault);
 
       if (apps_fault)
         lv_label_set_text_fmt(joe_dash.Screenshot_fault, "SS");
@@ -98,15 +98,17 @@ void check_messages() {
       unpack_message(&kms_can, CAN_ID_M160_TEMPERATURE_SET_1, msg_in.buf.val,
                      msg_in.length, 0);
 
-      uint8_t module_a, module_b, module_c;
+      double module_a, module_b, module_c;
 
-      decode_can_0x0a0_INV_Module_A_Temp(&kms_can, (double *)&module_a);
-      decode_can_0x0a0_INV_Module_B_Temp(&kms_can, (double *)&module_b);
-      decode_can_0x0a0_INV_Module_C_Temp(&kms_can, (double *)&module_c);
+      decode_can_0x0a0_INV_Module_A_Temp(&kms_can, &module_a);
+      decode_can_0x0a0_INV_Module_B_Temp(&kms_can, &module_b);
+      decode_can_0x0a0_INV_Module_C_Temp(&kms_can, &module_c);
 
-      lv_label_set_text_fmt(joe_dash.Inverter_temps_c, "%i/%i/%i", module_a,
-                            module_b, module_c);
+      lv_label_set_text_fmt(joe_dash.Inverter_temps_c, "%i/%i/%i",
+                            uint8_t(module_a), uint8_t(module_b),
+                            uint8_t(module_c));
       break;
+#endif
     }
   }
 }

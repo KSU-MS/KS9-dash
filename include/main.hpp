@@ -1,5 +1,7 @@
 #pragma once
 
+#define HAS_DISPLAY
+
 // External imports
 #include <Arduino.h>
 
@@ -7,8 +9,8 @@
 #include "display_handeler.hpp"
 #include "parameters.hpp"
 
-bool btn_1, btn_2, btn_3, btn_4, btn_5, btn_6;              // OK High
-bool BMS_state = true, IMD_state = true, BSPD_state = true; // OK High
+bool btn_1, btn_2, btn_3, btn_4, btn_5, btn_6;                 // OK High
+bool BMS_state = false, IMD_state = false, BSPD_state = false; // OK High
 
 // Expects OK High signals
 void update_lights() {
@@ -32,10 +34,10 @@ void update_buttons() {
 #include "can_handeler.hpp"
 
 IntervalTimer timer_1hz;
-IntervalTimer timer_10hz;
+// IntervalTimer timer_10hz;
 
 void timer_1hz_func() { send_firmware_status_message(); }
 
-void timer_10hz_func() {
-  send_button_status_message(btn_1, btn_2, btn_3, btn_4, btn_5, btn_6);
-}
+// void timer_10hz_func() {
+//   send_button_status_message(btn_1, btn_2, btn_3, btn_4, btn_5, btn_6);
+// }

@@ -12,9 +12,11 @@ void setup() {
   }
 
   timer_1hz.begin(timer_1hz_func, 1000000);
-  timer_10hz.begin(timer_10hz_func, 100000);
+  // timer_10hz.begin(timer_10hz_func, 100000);
 
+#ifdef HAS_DISPLAY
   start_display();
+#endif
 }
 
 void loop() {
@@ -24,12 +26,12 @@ void loop() {
 
   //
   //// GPIO Stage
-  update_buttons();
+  // update_buttons();
   update_lights();
 
   //
   //// Display Stage
+#ifdef HAS_DISPLAY
   lv_timer_handler();
-
-  delay(5);
+#endif
 }

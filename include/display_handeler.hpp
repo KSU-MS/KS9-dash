@@ -50,7 +50,7 @@ void update_display(lv_display_t *disp, const lv_area_t *area,
 void start_display() {
   // NOTE: I know this looks awful, just don't worry about it
   tft.init(DISPLAY_VERTICAL, DISPLAY_HORIZONTAL); // 240 w x 320 h
-  tft.setRotation(3);                             // 320 w x 240 h
+  tft.setRotation(1);                             // 320 w x 240 h
   tft.fillScreen(0);
 
   lv_init();
