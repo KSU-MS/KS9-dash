@@ -94,6 +94,27 @@ void check_messages() {
       lv_label_set_text_fmt(joe_dash.TS_voltage, "%iv", (int)ts_voltage_double);
       break;
 
+    case CAN_ID_M171_FAULT_CODES: {
+      unpack_message(&kms_can, CAN_ID_M171_FAULT_CODES, msg_in.buf.val,
+                     msg_in.length, 0);
+
+      uint16_t post_fault_lo, post_fault_hi, run_fault_lo, run_fault_hi;
+
+      decode_can_0x0ab_INV_Post_Fault_Lo(&kms_can, &post_fault_lo);
+      decode_can_0x0ab_INV_Post_Fault_Hi(&kms_can, &post_fault_hi);
+      decode_can_0x0ab_INV_Run_Fault_Lo(&kms_can, &run_fault_lo);
+      decode_can_0x0ab_INV_Run_Fault_Hi(&kms_can, &run_fault_hi);
+
+      bool inverter_fault = post_fault_lo || post_fault_hi || run_fault_lo ||
+                            run_fault_hi;
+
+      lv_obj_set_style_text_color(
+          joe_dash.Inverter_fault,
+          inverter_fault ? lv_color_hex(0xFF0000) : lv_color_hex(0x00FF00), 0);
+
+      break;
+    }
+
     case CAN_ID_M160_TEMPERATURE_SET_1:
       unpack_message(&kms_can, CAN_ID_M160_TEMPERATURE_SET_1, msg_in.buf.val,
                      msg_in.length, 0);

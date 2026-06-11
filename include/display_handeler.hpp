@@ -23,6 +23,7 @@ struct joe_dash_t {
   lv_obj_t *Screenshot_fault;
   lv_obj_t *BSE_fault;
   lv_obj_t *APPS_fault;
+  lv_obj_t *Inverter_fault;
 
   // Still important
   lv_obj_t *Pack_temps_c;
@@ -69,6 +70,7 @@ void start_display() {
   joe_dash.Screenshot_fault = lv_label_create(lv_screen_active());
   joe_dash.BSE_fault = lv_label_create(lv_screen_active());
   joe_dash.APPS_fault = lv_label_create(lv_screen_active());
+  joe_dash.Inverter_fault = lv_label_create(lv_screen_active());
   joe_dash.Inverter_temps_c = lv_label_create(lv_screen_active());
   joe_dash.Pack_temps_c = lv_label_create(lv_screen_active());
   joe_dash.Torque_limit_nm = lv_label_create(lv_screen_active());
@@ -98,6 +100,13 @@ void start_display() {
   //
   //// BOTTOM RIGHT
   // APPS lables
+  lv_label_set_text(joe_dash.Inverter_fault, "INV");
+  lv_obj_align(joe_dash.Inverter_fault, LV_ALIGN_BOTTOM_RIGHT, -5, -110);
+  lv_obj_set_style_text_font(joe_dash.Inverter_fault, &comic_32, 0);
+  lv_obj_set_style_text_letter_space(joe_dash.Inverter_fault, 3, 0);
+  lv_obj_set_style_text_color(joe_dash.Inverter_fault, lv_color_hex(0x00FF00),
+                              0);
+
   lv_label_set_text(joe_dash.Screenshot_fault, "SS");
   lv_obj_align(joe_dash.Screenshot_fault, LV_ALIGN_BOTTOM_RIGHT, -5, -75);
   lv_obj_set_style_text_font(joe_dash.Screenshot_fault, &comic_32, 0);
