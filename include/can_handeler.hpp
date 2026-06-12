@@ -19,9 +19,9 @@ void check_messages() {
 
       uint8_t IMD_state_uint, BMS_state_uint, BSPD_state_uint;
 
-      decode_can_0x0c3_VCU_IMD_OK_HIGH(&kms_can, &IMD_state_uint);
-      decode_can_0x0c3_VCU_BMS_OK_HIGH(&kms_can, &BMS_state_uint);
-      decode_can_0x0c3_VCU_BSPD_OK_HIGH(&kms_can, &BSPD_state_uint);
+      decode_can_0x0c3_vcu_imd_ok_high(&kms_can, &IMD_state_uint);
+      decode_can_0x0c3_vcu_bms_ok_high(&kms_can, &BMS_state_uint);
+      decode_can_0x0c3_vcu_bspd_ok_high(&kms_can, &BSPD_state_uint);
 
       IMD_state = bool(IMD_state_uint);
       BMS_state = bool(BMS_state_uint);
@@ -29,11 +29,11 @@ void check_messages() {
 
 #ifdef HAS_DISPLAY
       uint8_t apps_fault, bse_fault, ss_fault;
-      decode_can_0x0c3_VCU_ACCEL_IMPLAUSIBLE(&kms_can, &apps_fault);
-      decode_can_0x0c3_VCU_BRAKE_IMPLAUSIBLE(&kms_can, &bse_fault);
-      decode_can_0x0c3_VCU_ACCEL_BRAKE_IMPLAUSIBLE(&kms_can, &ss_fault);
+      decode_can_0x0c3_vcu_accel_implausible(&kms_can, &apps_fault);
+      decode_can_0x0c3_vcu_brake_implausible(&kms_can, &bse_fault);
+      decode_can_0x0c3_vcu_accel_brake_implausible(&kms_can, &ss_fault);
 
-      if (apps_fault)
+      if (ss_fault)
         lv_label_set_text_fmt(joe_dash.Screenshot_fault, "SS");
       else
         lv_label_set_text_fmt(joe_dash.Screenshot_fault, "");
@@ -43,18 +43,18 @@ void check_messages() {
       else
         lv_label_set_text_fmt(joe_dash.BSE_fault, "");
 
-      if (ss_fault)
+      if (apps_fault)
         lv_label_set_text_fmt(joe_dash.APPS_fault, "APPS");
       else
         lv_label_set_text_fmt(joe_dash.APPS_fault, "");
 
       uint8_t max_torque;
-      decode_can_0x0c3_VCU_MAX_TORQUE(&kms_can, &max_torque);
+      decode_can_0x0c3_vcu_max_torque(&kms_can, &max_torque);
 
       lv_label_set_text_fmt(joe_dash.Torque_limit_nm, "%iNm", max_torque);
 
       uint8_t vcu_state;
-      decode_can_0x0c3_VCU_STATEMACHINE_STATE(&kms_can, &vcu_state);
+      decode_can_0x0c3_vcu_statemachine_state(&kms_can, &vcu_state);
 
       switch (vcu_state) {
       case 0:
@@ -114,15 +114,14 @@ void check_messages() {
 }
 
 void send_firmware_status_message() {
-  encode_can_0x0ec_dash_on_time_seconds(&kms_can, millis() / 1000);
-  encode_can_0x0ec_dash_fw_version(&kms_can, AUTO_VERSION);
-  encode_can_0x0ec_dash_project_is_dirty(&kms_can, FW_PROJECT_IS_DIRTY);
-  encode_can_0x0ec_dash_project_on_main(&kms_can, FW_PROJECT_IS_MAIN_OR_MASTER);
+  encode_can_0x3bc_board_on_time_seconds(&kms_can, millis() / 1000);
+  encode_can_0x3bc_firmware_version(&kms_can, AUTO_VERSION);
+  encode_can_0x3bc_firmware_is_dirty(&kms_can, FW_PROJECT_IS_DIRTY);
+  encode_can_0x3bc_firmware_on_main(&kms_can, FW_PROJECT_IS_MAIN_OR_MASTER);
 
   can_message out_msg;
-  out_msg.id = CAN_ID_DASH_FIRMWARE_VERSION;
-  out_msg.length =
-      pack_message(&kms_can, CAN_ID_DASH_FIRMWARE_VERSION, &out_msg.buf.val);
+  out_msg.id = CAN_ID_DASH_BOARD_DATA;
+  out_msg.length = pack_message(&kms_can, out_msg.id, &out_msg.buf.val);
 
   inv_can.send_controller_message(out_msg);
 }
@@ -138,8 +137,7 @@ void send_button_status_message(bool button_1, bool button_2, bool button_3,
 
   can_message out_msg;
   out_msg.id = CAN_ID_DASH_BUTTONS;
-  out_msg.length =
-      pack_message(&kms_can, CAN_ID_DASH_BUTTONS, &out_msg.buf.val);
+  out_msg.length = pack_message(&kms_can, out_msg.id, &out_msg.buf.val);
 
   inv_can.send_controller_message(out_msg);
 }
