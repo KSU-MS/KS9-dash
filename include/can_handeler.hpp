@@ -94,6 +94,16 @@ void check_messages() {
       lv_label_set_text_fmt(joe_dash.TS_voltage, "%iv", (int)ts_voltage_double);
       break;
 
+    case CAN_ID_M169_INTERNAL_VOLTAGES:
+      unpack_message(&kms_can, CAN_ID_M169_INTERNAL_VOLTAGES, msg_in.buf.val,
+                     msg_in.length, 0);
+      double glv_voltage_double;
+
+      decode_can_0x0a9_INV_Ref_Voltage_12_0(&kms_can, &glv_voltage_double);
+      lv_label_set_text_fmt(joe_dash.GLV_voltage, "%.1fv", glv_voltage_double);
+
+      break;
+
     case CAN_ID_M171_FAULT_CODES: {
       unpack_message(&kms_can, CAN_ID_M171_FAULT_CODES, msg_in.buf.val,
                      msg_in.length, 0);
@@ -105,12 +115,42 @@ void check_messages() {
       decode_can_0x0ab_INV_Run_Fault_Lo(&kms_can, &run_fault_lo);
       decode_can_0x0ab_INV_Run_Fault_Hi(&kms_can, &run_fault_hi);
 
-      bool inverter_fault = post_fault_lo || post_fault_hi || run_fault_lo ||
-                            run_fault_hi;
+      bool inverter_fault =
+          post_fault_lo || post_fault_hi || run_fault_lo || run_fault_hi;
 
-      lv_obj_set_style_text_color(
-          joe_dash.Inverter_fault,
-          inverter_fault ? lv_color_hex(0xFF0000) : lv_color_hex(0x00FF00), 0);
+      static bool last_inverter_fault = false;
+      static bool inverter_fault_state_known = false;
+
+      if (!inverter_fault_state_known ||
+          inverter_fault != last_inverter_fault) {
+        lv_obj_set_style_bg_color(joe_dash.Inverter_fault,
+                                  inverter_fault ? lv_color_hex(0xFF0000)
+                                                 : lv_color_hex(0x00FF00),
+                                  0);
+
+        last_inverter_fault = inverter_fault;
+        inverter_fault_state_known = true;
+      }
+
+      break;
+    }
+
+    case CAN_ID_MSGID_0X6B2: {
+      if (unpack_message(&kms_can, CAN_ID_MSGID_0X6B2, msg_in.buf.val,
+                         msg_in.length, 0) < 0) {
+        break;
+      }
+
+      double low_cell_voltage;
+      decode_can_0x6b2_Low_Cell_Voltage(&kms_can, &low_cell_voltage);
+
+      static double last_low_cell_voltage = -1.0;
+
+      if (low_cell_voltage != last_low_cell_voltage) {
+        lv_label_set_text_fmt(joe_dash.Low_cell_voltage, "%.3fV",
+                              low_cell_voltage);
+        last_low_cell_voltage = low_cell_voltage;
+      }
 
       break;
     }
@@ -119,15 +159,34 @@ void check_messages() {
       unpack_message(&kms_can, CAN_ID_M160_TEMPERATURE_SET_1, msg_in.buf.val,
                      msg_in.length, 0);
 
-      uint8_t module_a, module_b, module_c;
+      double module_a, module_b, module_c;
 
-      decode_can_0x0a0_INV_Module_A_Temp(&kms_can, (double *)&module_a);
-      decode_can_0x0a0_INV_Module_B_Temp(&kms_can, (double *)&module_b);
-      decode_can_0x0a0_INV_Module_C_Temp(&kms_can, (double *)&module_c);
+      decode_can_0x0a0_INV_Module_A_Temp(&kms_can, &module_a);
+      decode_can_0x0a0_INV_Module_B_Temp(&kms_can, &module_b);
+      decode_can_0x0a0_INV_Module_C_Temp(&kms_can, &module_c);
 
-      lv_label_set_text_fmt(joe_dash.Inverter_temps_c, "%i/%i/%i", module_a,
-                            module_b, module_c);
+      lv_label_set_text_fmt(joe_dash.Inverter_temps_c, "%i/%i/%i",
+                            (int)module_a, (int)module_b, (int)module_c);
       break;
+
+    case CAN_ID_VCU_LIFETIME_DISTANCE_AND_ONTIME: {
+      unpack_message(&kms_can, CAN_ID_VCU_LIFETIME_DISTANCE_AND_ONTIME,
+                     msg_in.buf.val, msg_in.length, 0);
+
+      uint32_t distance_m_raw;
+      uint32_t consumed_wh_raw;
+      decode_can_0x0d0_vcu_lifetime_distance(&kms_can, &distance_m_raw);
+      decode_can_0x0d0_vcu_lifetime_ontime(&kms_can, &consumed_wh_raw);
+
+      energy_delta_update_power_tracking((double)distance_m_raw,
+                                         (double)consumed_wh_raw);
+      if (energy_delta.started) {
+        lv_label_set_text_fmt(joe_dash.Energy_delta, "%+iWh",
+                              (int)energy_delta.delta_wh);
+      }
+
+      break;
+    }
     }
   }
 }

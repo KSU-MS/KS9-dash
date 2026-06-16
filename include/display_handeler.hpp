@@ -24,9 +24,11 @@ struct joe_dash_t {
   lv_obj_t *BSE_fault;
   lv_obj_t *APPS_fault;
   lv_obj_t *Inverter_fault;
+  lv_obj_t *Inverter_fault_text;
 
   // Still important
   lv_obj_t *Pack_temps_c;
+  lv_obj_t *Low_cell_voltage;
   lv_obj_t *Inverter_temps_c;
 
   // Helpful
@@ -51,7 +53,7 @@ void update_display(lv_display_t *disp, const lv_area_t *area,
 void start_display() {
   // NOTE: I know this looks awful, just don't worry about it
   tft.init(DISPLAY_VERTICAL, DISPLAY_HORIZONTAL); // 240 w x 320 h
-  tft.setRotation(3);                             // 320 w x 240 h
+  tft.setRotation(1);                             // 320 w x 240 h
   tft.fillScreen(0);
 
   lv_init();
@@ -70,11 +72,14 @@ void start_display() {
   joe_dash.Screenshot_fault = lv_label_create(lv_screen_active());
   joe_dash.BSE_fault = lv_label_create(lv_screen_active());
   joe_dash.APPS_fault = lv_label_create(lv_screen_active());
-  joe_dash.Inverter_fault = lv_label_create(lv_screen_active());
+  joe_dash.Inverter_fault = lv_obj_create(lv_screen_active());
+  joe_dash.Inverter_fault_text = lv_label_create(joe_dash.Inverter_fault);
   joe_dash.Inverter_temps_c = lv_label_create(lv_screen_active());
   joe_dash.Pack_temps_c = lv_label_create(lv_screen_active());
+  joe_dash.Low_cell_voltage = lv_label_create(lv_screen_active());
   joe_dash.Torque_limit_nm = lv_label_create(lv_screen_active());
   joe_dash.VCU_state = lv_label_create(lv_screen_active());
+  joe_dash.Energy_delta = lv_label_create(lv_screen_active());
 
   // TODO: Finish this
   // Bars
@@ -100,12 +105,20 @@ void start_display() {
   //
   //// BOTTOM RIGHT
   // APPS lables
-  lv_label_set_text(joe_dash.Inverter_fault, "INV");
-  lv_obj_align(joe_dash.Inverter_fault, LV_ALIGN_BOTTOM_RIGHT, -5, -110);
-  lv_obj_set_style_text_font(joe_dash.Inverter_fault, &comic_32, 0);
-  lv_obj_set_style_text_letter_space(joe_dash.Inverter_fault, 3, 0);
-  lv_obj_set_style_text_color(joe_dash.Inverter_fault, lv_color_hex(0x00FF00),
-                              0);
+  lv_obj_set_size(joe_dash.Inverter_fault, 55, 30);
+  lv_obj_align(joe_dash.Inverter_fault, LV_ALIGN_BOTTOM_RIGHT, 0, -118);
+  lv_obj_set_style_bg_color(joe_dash.Inverter_fault, lv_color_hex(0x808080), 0);
+  lv_obj_set_style_bg_opa(joe_dash.Inverter_fault, LV_OPA_COVER, 0);
+  lv_obj_set_style_border_width(joe_dash.Inverter_fault, 0, 0);
+  lv_obj_set_style_radius(joe_dash.Inverter_fault, 0, 0);
+  lv_obj_set_style_pad_all(joe_dash.Inverter_fault, 0, 0);
+
+  lv_label_set_text(joe_dash.Inverter_fault_text, "INV");
+  lv_obj_center(joe_dash.Inverter_fault_text);
+  lv_obj_set_style_text_font(joe_dash.Inverter_fault_text, &comic_32, 0);
+  lv_obj_set_style_text_letter_space(joe_dash.Inverter_fault_text, 3, 0);
+  lv_obj_set_style_text_color(joe_dash.Inverter_fault_text,
+                              lv_color_hex(0xFFFFFF), 0);
 
   lv_label_set_text(joe_dash.Screenshot_fault, "SS");
   lv_obj_align(joe_dash.Screenshot_fault, LV_ALIGN_BOTTOM_RIGHT, -5, -75);
@@ -130,6 +143,11 @@ void start_display() {
   lv_obj_set_style_text_font(joe_dash.Pack_temps_c, &comic_22, 0);
   lv_obj_set_style_text_letter_space(joe_dash.Pack_temps_c, 2, 0);
 
+  lv_label_set_text(joe_dash.Low_cell_voltage, "-.---V");
+  lv_obj_align(joe_dash.Low_cell_voltage, LV_ALIGN_BOTTOM_LEFT, 95, -95);
+  lv_obj_set_style_text_font(joe_dash.Low_cell_voltage, &comic_22, 0);
+  lv_obj_set_style_text_letter_space(joe_dash.Low_cell_voltage, 2, 0);
+
   lv_label_set_text(joe_dash.Inverter_temps_c, "00/00/00");
   lv_obj_align(joe_dash.Inverter_temps_c, LV_ALIGN_BOTTOM_LEFT, 5, -65);
   lv_obj_set_style_text_font(joe_dash.Inverter_temps_c, &comic_22, 0);
@@ -145,6 +163,11 @@ void start_display() {
   lv_obj_align(joe_dash.VCU_state, LV_ALIGN_BOTTOM_LEFT, 5, -5);
   lv_obj_set_style_text_font(joe_dash.VCU_state, &comic_22, 0);
   lv_obj_set_style_text_letter_space(joe_dash.VCU_state, 2, 0);
+
+  lv_label_set_text(joe_dash.Energy_delta, "--Wh");
+  lv_obj_align(joe_dash.Energy_delta, LV_ALIGN_CENTER, 20, -85);
+  lv_obj_set_style_text_font(joe_dash.Energy_delta, &comic_70, 0);
+  lv_obj_set_style_text_letter_space(joe_dash.Energy_delta, 7, 0);
 
   lv_obj_t *colon_3 = lv_label_create(lv_screen_active());
   lv_label_set_text(colon_3, ":3");

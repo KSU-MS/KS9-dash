@@ -5,6 +5,7 @@
 
 // Local
 #include "display_handeler.hpp"
+#include "energy_delta.hpp"
 #include "parameters.hpp"
 
 bool btn_1, btn_2, btn_3, btn_4, btn_5, btn_6;              // OK High
@@ -25,6 +26,12 @@ void update_buttons() {
   btn_4 = digitalRead(BUTTON4);
   btn_5 = digitalRead(BUTTON5);
   btn_6 = digitalRead(BUTTON6);
+
+  energy_delta_update_rtd_button(btn_5);
+  if ((energy_delta.rtd_press_count == 1 || energy_delta.start_pending) &&
+      !energy_delta.started) {
+    lv_label_set_text(joe_dash.Energy_delta, "WA");
+  }
 }
 
 //
